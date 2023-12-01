@@ -72,7 +72,9 @@ public class EntryServlet extends BaseServlet
 				else
 				{
 					Races.Entry entry = getRaces().getEntry(id);
-					log("entry[1]: " + entry.getName() + " waiting...");
+					if (entry != null)
+						// might have timed out
+						log("entry[1]: " + entry.getName() + " waiting...");
 					byte[] outdata = {
 						0, 0, 0, 0, 			// status: 0:waiting, 1:game start
 						(byte)entries, 0, 0, 0, // # entries

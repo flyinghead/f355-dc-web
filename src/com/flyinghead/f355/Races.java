@@ -67,10 +67,10 @@ public class Races
 		
 		int checkEntry(int id)
 		{
+			timeoutEntries();
 			Entry entry = entries.get(id);
 			if (entry == null)
 				return -1;
-			timeoutEntries();
 			entry.lastHeardOf = new Date();
 			return entries.size();
 		}

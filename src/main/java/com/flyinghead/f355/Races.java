@@ -201,6 +201,19 @@ public class Races
 		}
 		for (Race race : timeoutRaces)
 		{
+			if (race.getStatus() == 1 && race.getEntryCount() >= 3)
+			{
+				// Timeout individual racer if at least 2 remain
+				for (int id : race.getEntryIds())
+					if (race.getQualifier(id) == null) {
+						context.log("Race " + race.getCircuitName() + " qualifier " + race.getEntryName(id) + " has timed out");
+						race.deleteEntry(id);
+						raceById.remove(id);
+					}
+				if (race.getEntryCount() >= 2)
+					// Allow the race to start
+					continue;
+			}
 			context.log("Race " + race.getCircuitName() + " state " + race.getStatus() + " timed out");
 			for (int id : race.getEntryIds())
 				raceById.remove(id);

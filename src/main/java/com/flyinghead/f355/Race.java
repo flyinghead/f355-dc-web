@@ -70,9 +70,13 @@ public class Race
 	public synchronized Set<Integer> getEntryIds() {
 		return new HashSet<>(entries.keySet());
 	}
-	public synchronized String getEntryName(int id)
-	{
-		return F355.getPlayerName(entries.get(id));
+	public String getEntryName(int id) {
+		return F355.getPlayerName(getEntry(id));
+	}
+	public synchronized void deleteEntry(int id) {
+		entries.remove(id);
+		qualifiers.remove(id);
+		results.remove(id);
 	}
 
 	public synchronized byte[] getQualifier(int id) {

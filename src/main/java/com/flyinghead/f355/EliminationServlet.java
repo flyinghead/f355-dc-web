@@ -41,12 +41,29 @@ public class EliminationServlet extends BaseServlet
 			if (race == null)
 			{
 				log("elimination[0] No race found for " + Integer.toHexString(id));
-				respondError(1, resp);
+				// Don't report error just yet
+				respond(new byte[0], resp);
 				return;
 			}
 			byte[] qualifier = Arrays.copyOfRange(data, 11, 11 + 8);
+			int frames = bytesToId(qualifier, 0);
+			String timeStr;
+			if (frames == 0xfffff) {
+				timeStr = "No Goal";
+			}
+			else
+			{
+				int frac = bytesToId(qualifier, 4);
+				float time = ((float)frames + Float.intBitsToFloat(frac)) / 60.2f;
+				int min = (int)time / 60;
+				time -= (float)min * 60.f;
+				int sec = (int)time;
+				time -= (float)sec;
+				int msec = (int)(time * 1000.f);
+				timeStr = String.format("%1$02d'%2$02d\"%3$03d", min, sec, msec);
+			}
+			log("Race " + race.getCircuitName() + " qualifier received for " + race.getEntryName(id) + ": " + timeStr);
 			race.setQualifier(id, qualifier);
-			log("Race " + race.getCircuitName() + " qualifier received for " + race.getEntryName(id));
 
 			// Nothing to return
 			respond(new byte[0], resp);
@@ -86,7 +103,10 @@ public class EliminationServlet extends BaseServlet
 				if (race == null)
 				{
 					log("elimination[1, 0] No race found for " + Integer.toHexString(id));
-					respondError(1, resp);
+					// Race cancelled: all other drivers retired
+					byte[] outdata = new byte[18 * 4];
+					outdata[0] = 1;
+					respond(outdata, resp);
 					return;
 				}
 				boolean qualifDone = race.isQualifierDone();

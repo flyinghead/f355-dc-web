@@ -82,7 +82,7 @@ public abstract class BaseServlet extends HttpServlet
 	}
 	
 	protected int makeId() {
-		return random.nextInt();
+		return random.nextInt(10000000); // MUST be less than 10 million for correct qualifier ranking
 	}
 	
 	protected void idToBytes(int id, byte[] array, int offset)

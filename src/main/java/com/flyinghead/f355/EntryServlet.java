@@ -39,7 +39,8 @@ public class EntryServlet extends BaseServlet
 			int id = makeId();
 			byte[] entryData = Arrays.copyOfRange(data, 3, 3 + 128);
 			Races.Entry entry = getRaces().addEntry(id, entryData);
-			log("New entry " + entry.getName() + " circuit " + F355.getCircuitName(entry.circuit));
+			boolean flycast = new String(entryData, 0, 8).equals("gmzdbtu2"); // flycast1 ROT1
+			log("New entry " + entry.getName() + " circuit " + F355.getCircuitName(entry.circuit) + (flycast ? " (Flycast)" : " (Real console)"));
 			// should be returning 2 identifiers: private id, public id
 			byte[] outdata = new byte[8];
 			idToBytes(id, outdata, 0);

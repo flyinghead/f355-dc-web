@@ -41,12 +41,14 @@ public class FinalServlet extends BaseServlet
 			if (race == null)
 			{
 				log("final[0] No race found for " + Integer.toHexString(id));
-				respondError(1, resp);
-				return;
+				// Don't report error just yet
 			}
-			log("Race " + race.getCircuitName() + " result received for " + race.getEntryName(id));
-			byte[] result = Arrays.copyOfRange(data, 11, data.length);
-			race.setResult(id, result);
+			else
+			{
+				log("Race " + race.getCircuitName() + " result received for " + race.getEntryName(id));
+				byte[] result = Arrays.copyOfRange(data, 11, data.length);
+				race.setResult(id, result);
+			}
 			// no output
 			respond(new byte[0], resp);
 		}
@@ -81,7 +83,10 @@ public class FinalServlet extends BaseServlet
 				if (race == null)
 				{
 					log("final[1, 0] No race found for " + Integer.toHexString(id));
-					respondError(1, resp);
+					// Race cancelled: all other drivers retired
+					byte[] outdata = new byte[9 * 4];
+					outdata[0] = 1;
+					respond(outdata, resp);
 					return;
 				}
 				byte[] outdata = {

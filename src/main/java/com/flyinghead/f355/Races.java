@@ -148,17 +148,15 @@ public class Races
 		}
 		else
 		{
-			// Start the race if an entry has been waiting for more that 60 sec
+			// Start the race if at least 2 entries have been waiting for more that 60 sec
 			long timeout = System.currentTimeMillis() - 60000;
-			Entry timeoutEntry = null;
+			int timeoutEntries = 0;
 			for (Entry entry : waitingList.entries.values())
 			{
-				if (entry.created.getTime() < timeout) {
-					timeoutEntry = entry;
-					break;
-				}
+				if (entry.created.getTime() < timeout)
+					timeoutEntries++;
 			}
-			if (timeoutEntry == null)
+			if (timeoutEntries < 2)
 				return null;
 			racers = new ArrayList<>(waitingList.entries.values());
 		}

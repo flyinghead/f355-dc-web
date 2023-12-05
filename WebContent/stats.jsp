@@ -12,8 +12,6 @@
 <h3>F355 Challenge statistics</h3><br>
 <% Races races = (Races)application.getAttribute("races"); %>
 Races: <%=races.getRaceCount() %><br>
-<h4>Waiting list</h4>
-Novice: <%=races.getWaitingListSize(false) %><br>
-Intermediate: <%=races.getWaitingListSize(true) %><br>
+Waiting list: <%=races.getWaitingListSize() %><br>
 </body>
 </html>

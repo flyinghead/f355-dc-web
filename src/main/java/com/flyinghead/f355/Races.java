@@ -28,11 +28,6 @@ import javax.servlet.ServletContext;
 
 public class Races
 {
-	public Races() {
-		waitingLists[0] = new WaitingList();
-		waitingLists[1] = new WaitingList();
-	}
-
 	public static class Entry
 	{
 		private Entry(int id, byte[] entryData)
@@ -93,11 +88,9 @@ public class Races
 		Race race = raceById.get(id);
 		if (race != null)
 			return race;
-		Entry entry = waitingLists[0].entries.get(id);
+		Entry entry = waitingList.entries.get(id);
 		if (entry != null)
-			checkStartRace(false);
-		else
-			checkStartRace(true);
+			checkStartRace();
 		// a race might have started but the user isn't necessarily part of it
 		return raceById.get(id);
 	}
@@ -111,30 +104,22 @@ public class Races
 	public synchronized Entry addEntry(int id, byte[] entryData)
 	{
 		Entry entry = new Entry(id, entryData);
-		int listIdx = entry.intermediate ? 1 : 0;
-		waitingLists[listIdx].addEntry(id, entry);
+		waitingList.addEntry(id, entry);
 		return entry;
 	}
 	
 	public synchronized int checkEntry(int id)
 	{
-		int entries = waitingLists[0].checkEntry(id);
-		if (entries == -1)
-			entries = waitingLists[1].checkEntry(id);
-		return entries;
+		return waitingList.checkEntry(id);
 	}
 
 	public synchronized Entry getEntry(int id)
 	{
-		Entry entry = waitingLists[0].entries.get(id);
-		if (entry == null)
-			entry = waitingLists[1].entries.get(id);
-		return entry;
+		return waitingList.entries.get(id);
 	}
 
-	private Race checkStartRace(boolean intermediate)
+	private Race checkStartRace()
 	{
-		WaitingList waitingList = waitingLists[intermediate ? 1 : 0]; 
 		if (waitingList.entries.size() <= 1)
 			return null;
 		List<Entry> racers = null;
@@ -171,7 +156,7 @@ public class Races
 				votedCircuit = i;
 			}
 
-		Race race = new Race(votedCircuit, intermediate, racers.get(0).weather);
+		Race race = new Race(votedCircuit, racers.get(0).weather);
 		races.add(race);
 		for (Entry entry : racers) {
 			enterRace(race, entry.id, entry.entryData);
@@ -217,12 +202,11 @@ public class Races
 				raceById.remove(id);
 			races.remove(race);
 		}
-		waitingLists[0].timeoutEntries();
-		waitingLists[1].timeoutEntries();
+		waitingList.timeoutEntries();
 	}
 	
-	public synchronized int getWaitingListSize(boolean intermediate) {
-		return waitingLists[intermediate ? 1 : 0].entries.size();
+	public synchronized int getWaitingListSize() {
+		return waitingList.entries.size();
 	}
 	public synchronized int getRaceCount() {
 		return races.size();
@@ -230,5 +214,5 @@ public class Races
 
 	private List<Race> races = new ArrayList<>();
 	private Map<Integer, Race> raceById = new HashMap<>(); 
-	private WaitingList[] waitingLists = new WaitingList[2];
+	private WaitingList waitingList = new WaitingList();
 }

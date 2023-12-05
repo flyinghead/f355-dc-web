@@ -25,10 +25,9 @@ import java.util.Set;
 
 public class Race
 {
-	public Race(int circuit, boolean intermediate, int weather)
+	public Race(int circuit, int weather)
 	{
 		this.circuit = circuit;
-		this.intermediate = intermediate;
 		this.weather = weather;
 	}
 
@@ -48,9 +47,6 @@ public class Race
 		return F355.getCircuitName(circuit);
 	}
 
-	public boolean isIntermediate() {
-		return intermediate;
-	}
 	public int getWeather() {
 		return weather;
 	}
@@ -101,7 +97,6 @@ public class Race
 
 	private int status = 0; // 0 waiting, 1 elimination, 2 final
 	private int circuit;
-	private boolean intermediate;
 	private int weather; // ??
 	private Map<Integer, byte[]> entries = new HashMap<>();
 	private Map<Integer, byte[]> qualifiers = new HashMap<>();

@@ -41,6 +41,18 @@ public class EntryServlet extends BaseServlet
 			Races.Entry entry = getRaces().addEntry(id, entryData);
 			boolean flycast = new String(entryData, 0, 8).equals("gmzdbtu2"); // flycast1 ROT1
 			log("New entry " + entry.getName() + " circuit " + F355.getCircuitName(entry.circuit) + (flycast ? " (Flycast)" : " (Real console)"));
+			// car # -1
+			//int carNum = entryData[0x7c];
+			// car color:
+			// 0	red
+			// 1	yellow
+			// 2	grey
+			// 3	white
+			// 4	green
+			// 5	orange
+			// 6	red & blue
+			// 7	white & green
+			//int carColor = entryData[0x7d];
 			// should be returning 2 identifiers: private id, public id
 			byte[] outdata = new byte[8];
 			idToBytes(id, outdata, 0);

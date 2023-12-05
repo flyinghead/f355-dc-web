@@ -32,7 +32,7 @@ public abstract class BaseServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
 	
-	private static Random random = new Random();
+	protected static Random random = new Random();
 
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException

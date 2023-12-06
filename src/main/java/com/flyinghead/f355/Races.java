@@ -17,7 +17,11 @@
  */
 package com.flyinghead.f355;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -167,6 +171,23 @@ public class Races
 		return race;
 	}
 	
+	private byte[] getDefaultResult(ServletContext context, Race race)
+	{
+		String path = "/WEB-INF/ghost/" + race.getCircuitName() + "_1.bin";
+		try {
+			InputStream is = context.getResourceAsStream(path);
+			if (is == null)
+				throw new FileNotFoundException();
+			byte[] buf = new byte[65536];
+			int l = is.read(buf);
+			is.close();
+			return Arrays.copyOfRange(buf, 0, l);
+		} catch (IOException e) {
+			context.log("Can't load default ghost \"" + path + '"', e);
+			return null;
+		}
+	}
+
 	public synchronized void timeoutRaces(ServletContext context)
 	{
 		List<Race> timeoutRaces = new ArrayList<>();
@@ -196,6 +217,28 @@ public class Races
 				if (race.getEntryCount() >= 2)
 					// Allow the race to start
 					continue;
+			}
+			else if (race.getStatus() == 2)
+			{
+				// Use default result for timed out drivers
+				byte [] defaultResult = null;
+				for (int id : race.getEntryIds())
+					if (race.getResult(id) == null)
+					{
+						if (defaultResult == null)
+						{
+							defaultResult = getDefaultResult(context, race);
+							if (defaultResult == null)
+								break;
+						}
+						race.setResult(id, defaultResult);
+						context.log("Race " + race.getCircuitName() + " driver " + race.getEntryName(id) + " has timed out");
+					}
+				if (defaultResult != null)
+				{
+					race.addTime(60000);
+					continue;
+				}
 			}
 			context.log("Race " + race.getCircuitName() + " state " + race.getStatus() + " timed out");
 			for (int id : race.getEntryIds())

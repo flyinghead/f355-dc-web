@@ -53,6 +53,9 @@ public class Race
 	public Date getStartTime() {
 		return startTime;
 	}
+	public void addTime(int ms) {
+		startTime = new Date(startTime.getTime() + ms);
+	}
 
 	public synchronized byte[] getEntry(int id) {
 		return entries.get(id);

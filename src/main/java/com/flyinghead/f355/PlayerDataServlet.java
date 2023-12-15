@@ -93,22 +93,20 @@ public class PlayerDataServlet extends AutowiredServlet
 			else if (params.get("registerAll") != null)
 			{
 				log("Registering all times");
+				player = dbService.getPlayer(playerId);
 				for (int i = 0; i < F355.CIRCUIT_COUNT; i++)
 				{
 					LapTime lapTime = player.getLapTime(i, false);
 					if (lapTime != null) {
 						log("Registering time for track " + F355.getCircuitName(i) + " AT");
-						player = dbService.saveBestLap(playerId, i, false);
+						dbService.saveBestLap(playerId, i, false);
 					}
 					lapTime = player.getLapTime(i, true);
 					if (lapTime != null) {
 						log("Registering time for track " + F355.getCircuitName(i) + " SA");
-						player = dbService.saveBestLap(playerId, i, true);
+						dbService.saveBestLap(playerId, i, true);
 					}
 				}
-				if (player == null)
-					// dont't crash
-					player = dbService.getPlayer(playerId);
 			}
 			else
 			{

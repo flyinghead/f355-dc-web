@@ -56,7 +56,8 @@
          </td>
       </tr>
    </table>
- 
+   <p>
+ 	<input type="submit" name="registerAll" value="Register all times"></p>
     <table border="0" cellspacing="0" cellpadding="3">
       <c:forEach items="${bean.tracks}" var="track">
 	      <tr bgcolor="#FFCCCC">

@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/cgi-bin/f355/network_play/entry.cgi")
-public class EntryServlet extends BaseServlet
+public class EntryServlet extends NetplayServlet
 {
 	private static final long serialVersionUID = 1L;
 

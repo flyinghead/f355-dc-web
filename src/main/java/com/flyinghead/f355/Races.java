@@ -38,7 +38,7 @@ public class Races
 		{
 			this.id = id;
 			this.entryData = entryData;
-			circuit = Math.min(F355.CIRCUIT_COUNT - 1, Math.max(0, entryData[108]));
+			circuit = Math.min(F355.NET_CIRCUIT_COUNT - 1, Math.max(0, entryData[108]));
 			intermediate = entryData[112] != 0;
 			weather = entryData[116];
 		}
@@ -137,8 +137,8 @@ public class Races
 		}
 		else
 		{
-			// Start the race if at least 2 entries have been waiting for more that 60 sec
-			long timeout = System.currentTimeMillis() - 60000;
+			// Start the race if at least 2 entries have been waiting for more that 90 sec
+			long timeout = System.currentTimeMillis() - 90000;
 			int timeoutEntries = 0;
 			for (Entry entry : waitingList.entries.values())
 			{
@@ -149,7 +149,7 @@ public class Races
 				return null;
 			racers = new ArrayList<>(waitingList.entries.values());
 		}
-		int[] votes = new int[F355.CIRCUIT_COUNT];
+		int[] votes = new int[F355.NET_CIRCUIT_COUNT];
 		for (Entry entry : racers)
 			votes[entry.circuit]++;
 		int votedCircuit = 0;
@@ -166,7 +166,7 @@ public class Races
 			enterRace(race, entry.id, entry.entryData);
 			waitingList.entries.remove(entry.id);
 		}
-		race.setStatus(1);
+		race.setStatus(Race.STATUS_QUALIF);
 		
 		return race;
 	}
@@ -194,18 +194,27 @@ public class Races
 		for (Race race : races)
 		{
 			long time = 0;
-			if (race.getStatus() == 1)
+			switch (race.getStatus())
+			{
+			case Race.STATUS_QUALIF:
 				// add a 60 sec tolerance to the max qualifier time
 				time = (F355.getQualifierTime(race.getCircuit()) + 60) * 1000;
-			else if (race.getStatus() == 2)
+				break;
+			case Race.STATUS_FINAL:
 				// add 2 min to the expected race time
 				time = (F355.getQualifierTime(race.getCircuit()) * F355.getLapCount(race.getCircuit()) + 120) * 1000;
+				break;
+			case Race.STATUS_FINISHED:
+				// keep results for 5 min
+				time = 5 * 60 * 1000;
+				break;
+			}
 			if (time != 0 && race.getStartTime().getTime() + time < System.currentTimeMillis())
 				timeoutRaces.add(race);
 		}
 		for (Race race : timeoutRaces)
 		{
-			if (race.getStatus() == 1 && race.getEntryCount() >= 3)
+			if (race.getStatus() == Race.STATUS_QUALIF && race.getEntryCount() >= 3)
 			{
 				// Timeout individual racer if at least 2 remain
 				for (int id : race.getEntryIds())
@@ -218,7 +227,7 @@ public class Races
 					// Allow the race to start
 					continue;
 			}
-			else if (race.getStatus() == 2)
+			else if (race.getStatus() == Race.STATUS_FINAL)
 			{
 				// Use default result for timed out drivers
 				byte [] defaultResult = null;
@@ -236,7 +245,7 @@ public class Races
 					}
 				if (defaultResult != null)
 				{
-					race.addTime(60000);
+					race.setStatus(Race.STATUS_FINISHED);
 					continue;
 				}
 			}

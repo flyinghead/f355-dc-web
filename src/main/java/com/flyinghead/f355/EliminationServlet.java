@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/cgi-bin/f355/network_play/elimination.cgi")
-public class EliminationServlet extends BaseServlet
+public class EliminationServlet extends NetplayServlet
 {
 	private static final long serialVersionUID = 1L;
 
@@ -43,6 +43,12 @@ public class EliminationServlet extends BaseServlet
 				log("elimination[0] No race found for " + Integer.toHexString(id));
 				// Don't report error just yet
 				respond(new byte[0], resp);
+				return;
+			}
+			if (race.getStatus() != Race.STATUS_QUALIF)
+			{
+				log("elimination[0] Race " + race.getCircuitName() + " already started (for " + race.getEntryName(id) + ")");
+				respondError(1, resp);
 				return;
 			}
 			byte[] qualifier = Arrays.copyOfRange(data, 11, 11 + 8);
@@ -111,7 +117,7 @@ public class EliminationServlet extends BaseServlet
 				}
 				boolean qualifDone = race.isQualifierDone();
 				if (qualifDone)
-					race.setStatus(2);
+					race.setStatus(Race.STATUS_FINAL);
 				byte[] outdata = {
 					(byte)(qualifDone ? 1 : 0), 0, 0, 0,	// 0:running, 1:all racers done
 					1, 0, 0, 0,		// position?

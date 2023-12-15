@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @WebServlet("/cgi-bin/f355/network_play/final.cgi")
-public class FinalServlet extends BaseServlet
+public class FinalServlet extends NetplayServlet
 {
 	private static final long serialVersionUID = 1L;
 
@@ -45,9 +45,17 @@ public class FinalServlet extends BaseServlet
 			}
 			else
 			{
+				if (race.getStatus() != Race.STATUS_FINAL)
+				{
+					log("final[0] Race " + race.getCircuitName() + " already finished (for " + race.getEntryName(id) + ")");
+					respondError(1, resp);
+					return;
+				}
 				log("Race " + race.getCircuitName() + " result received for " + race.getEntryName(id));
 				byte[] result = Arrays.copyOfRange(data, 11, data.length);
 				race.setResult(id, result);
+				if (race.isRaceDone())
+					race.setStatus(Race.STATUS_FINISHED);
 			}
 			// no output
 			respond(new byte[0], resp);

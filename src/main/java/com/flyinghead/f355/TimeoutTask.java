@@ -17,6 +17,9 @@
  */
 package com.flyinghead.f355;
 
+import java.io.File;
+import java.io.FilenameFilter;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -53,6 +56,21 @@ public class TimeoutTask implements ServletContextListener, Runnable
 		thread.start();
 	}
 
+	private void cleanUpTempDir()
+	{
+		File dir = new File(System.getProperty("java.io.tmpdir"));
+		File[] files = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.endsWith(".VMS") || name.endsWith(".VMI");
+			}
+		});
+		long cutoffDate = System.currentTimeMillis() - 60 * 60 * 1000; // 1 hour max
+		for (File f : files)
+			if (f.lastModified() < cutoffDate)
+				f.delete();
+	}
+	
 	@Override
 	public void run()
 	{
@@ -61,6 +79,7 @@ public class TimeoutTask implements ServletContextListener, Runnable
 		while (!stopping)
 		{
 			races.timeoutRaces(context);
+			cleanUpTempDir();
 			try {
 				Thread.sleep(15000);
 			} catch (InterruptedException e) {

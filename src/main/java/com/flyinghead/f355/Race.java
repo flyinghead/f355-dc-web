@@ -25,6 +25,11 @@ import java.util.Set;
 
 public class Race
 {
+	static final int STATUS_INIT = 0;
+	static final int STATUS_QUALIF = 1;
+	static final int STATUS_FINAL = 2;
+	static final int STATUS_FINISHED = 3;
+
 	public Race(int circuit, int weather)
 	{
 		this.circuit = circuit;
@@ -34,7 +39,7 @@ public class Race
 	public int getStatus() {
 		return status;
 	}
-	public void setStatus(int status) {
+	public synchronized void setStatus(int status) {
 		if (status != this.status) {
 			this.status = status;
 			this.startTime = new Date();
@@ -98,7 +103,7 @@ public class Race
 		return entries.size() == results.size();
 	}
 
-	private int status = 0; // 0 waiting, 1 elimination, 2 final
+	private int status = STATUS_INIT;
 	private int circuit;
 	private int weather; // ??
 	private Map<Integer, byte[]> entries = new HashMap<>();

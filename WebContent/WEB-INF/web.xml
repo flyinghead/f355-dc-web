@@ -4,4 +4,42 @@
          http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
          version="3.1">
 
+	<!-- The definition of the Root Spring Container shared by all Servlets and Filters -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>/WEB-INF/spring/spring-context.xml</param-value>
+	</context-param>
+	
+	<!-- Creates the Spring Container shared by all Servlets and Filters -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<servlet>
+	    <servlet-name>view_rank</servlet-name>
+	    <jsp-file>/ranking_en/RANK/RANKCOURSE/view_rank.jsp</jsp-file>
+	</servlet>
+	<servlet>
+	    <servlet-name>register_time</servlet-name>
+	    <jsp-file>/ranking_en/RANK/RANKCOURSE/register_time.jsp</jsp-file>
+	</servlet>
+	
+	<servlet-mapping>
+	    <servlet-name>view_rank</servlet-name>
+	    <url-pattern>/ranking_uk/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	    <url-pattern>/ranking_ja/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	    <url-pattern>/ranking_fr/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	    <url-pattern>/ranking_de/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	    <url-pattern>/ranking_it/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	    <url-pattern>/ranking_es/RANK/RANKCOURSE/view_rank.jsp</url-pattern>
+	</servlet-mapping>
+	<servlet-mapping>
+	    <servlet-name>register_time</servlet-name>
+	    <url-pattern>/ranking_uk/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	    <url-pattern>/ranking_ja/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	    <url-pattern>/ranking_fr/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	    <url-pattern>/ranking_de/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	    <url-pattern>/ranking_it/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	    <url-pattern>/ranking_es/RANK/RANKCOURSE/register_time.jsp</url-pattern>
+	</servlet-mapping>
 </web-app>

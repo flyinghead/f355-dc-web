@@ -17,10 +17,15 @@
  */
 package com.flyinghead.f355;
 
+import java.io.File;
+import java.util.Random;
+
 public class F355 {
 	private F355() {}
 	
-	public static final int CIRCUIT_COUNT = 6;
+	public static final int CIRCUIT_COUNT = 12; // 6 doesn't exist
+	public static final int NET_CIRCUIT_COUNT = 6;
+	private static Random random = new Random();
 
 	public static String getCircuitName(int circuit)
 	{
@@ -28,9 +33,15 @@ public class F355 {
 		case 0: return "SUZUKA SHORT";
 		case 1: return "MOTEGI";
 		case 2: return "SUZUKA";
-		case 3: return "LONG BEACH";
+		case 3: return "LONG-BEACH";
 		case 4: return "SUGO";
 		case 5: return "MONZA";
+		// hidden:
+		case 7: return "FIORANO";
+		case 8: return "NURBURGRING";
+		case 9: return "LAGUNA-SECA";
+		case 10: return "SEPANG";
+		case 11: return "ATLANTA";
 		default: return "Unknown";
 		}
 	}
@@ -71,4 +82,12 @@ public class F355 {
 				+ " (" + new String(entry, 105, 2) + ")";
 	}
 
+	public static int getRandomInt(int bound) {
+		return random.nextInt(bound);
+	}
+	
+	public static File getFileStore()
+	{
+		return new File(System.getProperty("f355.fileStore", System.getenv("HOME") + "/eclipse-jee-workspace/f355/WebContent/WEB-INF/replays/"));
+	}
 }

@@ -24,6 +24,7 @@ public class RegisterBean
 {
 	private Player player;
 	private String country;
+	private String uploadMessage = "";
 
 	public Player getPlayer() {
 		return player;
@@ -101,5 +102,13 @@ public class RegisterBean
 
 	public void setCountry(String country) {
 		this.country = country;
+	}
+
+	public String getUploadMessage() {
+		return uploadMessage;
+	}
+
+	public void setUploadMessage(String uploadMessage) {
+		this.uploadMessage = uploadMessage;
 	}
 }

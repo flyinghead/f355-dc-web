@@ -88,6 +88,6 @@ public class F355 {
 	
 	public static File getFileStore()
 	{
-		return new File(System.getProperty("f355.fileStore", System.getenv("HOME") + "/eclipse-jee-workspace/f355/WebContent/WEB-INF/replays/"));
+		return new File(System.getProperty("f355.fileStore", System.getenv("HOME") + "/eclipse-jee-workspace/f355/replays/"));
 	}
 }

@@ -36,6 +36,6 @@ public interface IDbService
 	Player createUpdatePlayer(byte[] data, String ip);
 	Player updateScoreName(int playerId, String name, String ip);
 	Player saveBestLap(int playerId, int circuit, boolean semiAuto);
-	void saveResult(byte[] data, String file, String playerId, String ip);
+	Player saveResult(int playerId, byte[] data, String file, String ip);
 	List<Result> getResults(int circuit, boolean semiAuto, int index, int count, int country, int assisted, int tuned, int raceMode, int arcade);
 }

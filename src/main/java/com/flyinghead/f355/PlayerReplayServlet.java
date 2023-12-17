@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +39,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.flyinghead.f355.db.IDbService;
+import com.flyinghead.f355.db.Player;
 
 @WebServlet("/cgi-bin/f355/dp3_player_replay.cgi")
 public class PlayerReplayServlet extends AutowiredServlet
@@ -103,13 +105,18 @@ s	 *
 			throw new ServletException("Not multipart content");
 		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());
 		try {
-			String playerId = null;
+			int playerId = -1;
+			String country = "en";
 			byte[] data = null;
 			List<FileItem> items = upload.parseRequest(req);
 			for (FileItem item : items)
 			{
 				if (item.getFieldName().equals("playerId")) {
-					playerId = item.getString();
+					playerId = Integer.valueOf(item.getString());
+					continue;
+				}
+				if (item.getFieldName().equals("country")) {
+					country = item.getString();
 					continue;
 				}
 				if (!"thefile".equals(item.getFieldName()))
@@ -120,17 +127,6 @@ s	 *
 				if (eol == -1)
 					throw new IOException("EOL not found in thefile");
 
-				//log("Attrs " + content.substring(0, eol));
-				//String[] attrs = content.substring(0, eol).split("&");
-				//String filename = null;
-				//for (String attr : attrs)
-				//	if (attr.startsWith("filename=")) {
-				//		filename = attr.substring(9);
-				//		break;
-				//	}
-				//if (filename == null)
-				//	throw new IOException("Filename not found");
-
 				content = content.substring(eol + 2);
 				content = Base64Scramble.unscramble(content);
 				data = Base64.getMimeDecoder().decode(content);
@@ -138,8 +134,6 @@ s	 *
 			if (data == null)
 				throw new ServletException("Result data not found");
 			
-			if (playerId == null)
-				playerId = new String(data, 0x290, 16);
 			File file = null;
 			String fileName = null;
 			do {
@@ -151,19 +145,27 @@ s	 *
 			out.write(data);
 			out.close();
 			
+			RegisterBean bean = new RegisterBean();
+			Player player = null;
 			try {
-				dbService.saveResult(data, fileName, playerId, getRemoteIP(req));
+				player = dbService.saveResult(playerId, data, fileName, getRemoteIP(req));
+				bean.setUploadMessage("Upload successful!");
 			} catch (RuntimeException e) {
 				file.delete();
-				throw e;
+				log("saveResult failed", e);
+				bean.setUploadMessage("Upload failed: " + e.getMessage());
 			}
-
+			if (player == null)
+				player = dbService.getPlayer(playerId);
+			bean.setPlayer(player);
+			bean.setCountry(country);
+			req.setAttribute("bean", bean);
+			RequestDispatcher reqDispatcher = req.getRequestDispatcher("/ranking_" + country + "/RANK/RANKCOURSE/register_time.jsp");
+			reqDispatcher.forward(req, resp);
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new IOException(e);
 		}
-		PrintWriter writer = resp.getWriter();
-		writer.write("<html><head><title>Done</title></head><body><h2>Your upload was successful!</h2></body></html>");
 	}
 }

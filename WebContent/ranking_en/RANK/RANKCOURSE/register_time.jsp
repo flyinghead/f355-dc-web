@@ -64,7 +64,6 @@
 	         <td>${bean.getTrackName(track)}</td>
 	         <td>AT</td>
 	         <c:if test="${bean.hasResult(track, false)}">
-		         <!-- td nowrap><b>${bean.getLapTime(track, false)}</b> -->
 		         <td nowrap><input type="submit" name="atTrack${track}" value="${bean.getLapTime(track, false)}"></b>
 		         	<img src="http://www.sega-rd2.com/f355/ranking_en/IMAGES/${bean.getRaceModeIcon(track, false)}" vspace="2" hspace="2">
 		         	<c:if test="${bean.isAssist(track, false)}">
@@ -80,7 +79,6 @@
 	         <td></td>
 	         <td>SA</td>
 	         <c:if test="${bean.hasResult(track, true)}">
-		         <!-- td nowrap><b>${bean.getLapTime(track, true)}</b>  -->
 		         <td nowrap><input type="submit" name="saTrack${track}" value="${bean.getLapTime(track, true)}"></b>
 		         	<img src="http://www.sega-rd2.com/f355/ranking_en/IMAGES/${bean.getRaceModeIcon(track, true)}" vspace="2" hspace="2">
 		         	<c:if test="${bean.isAssist(track, true)}">
@@ -95,6 +93,31 @@
       </c:forEach>
     </table>
 </form> 
+   <p>
+   <a name="upload_data"> </a>
+   <table border="0" bgcolor="#FF0000" cellspacing="0" cellpadding="2">
+      <tr>
+         <td nowrap>
+           <font color="#FFFFFF"><b>Upload Driving Data</b></font>
+         </td>
+      </tr>
+   </table>
+   <p>
+    <form action="/cgi-bin/f355/dp3_player_replay.cgi#upload_data" enctype="multipart/form-data" method="post">
+	  <input type="hidden" name="playerId" value="${bean.player.id}"/>
+	  <input type="hidden" name="country" value="${bean.country}">
+	  <table border="0" cellspacing="0" cellpadding="3">
+	  	<c:if test="${not empty bean.uploadMessage}">
+	       <tr>
+	         <td colspan="2">${bean.uploadMessage}</td>
+	       </tr>
+	  	</c:if>
+        <tr>
+          <td><input size=15 type="vmfile" name="thefile" id="thefile"></td><td><input type="submit" value="Upload"></td>
+        </tr>
+	  </table>
+	</form>
+
 <center><a href="http://www.sega-rd2.com/f355/ranking_${bean.country}/RANK/RANKCOURSE/index.html"><b>See all rankings</b></a></center>
 </body>
 </html>

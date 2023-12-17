@@ -20,6 +20,7 @@ package com.flyinghead.f355.db;
 import java.io.File;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -41,6 +42,30 @@ public class DbService implements IDbService
 {
 	@Autowired
 	private SessionFactory sessionFactory;
+
+	class TransactionalFileDeleter extends BaseSessionEventListener
+	{
+		private static final long serialVersionUID = 1L;
+		private List<File> toDelete;
+
+		TransactionalFileDeleter(Session session, File file) {
+			toDelete = Collections.singletonList(file);
+			session.addEventListeners(this);
+		}
+
+		TransactionalFileDeleter(Session session, List<File> file) {
+			toDelete = file;
+			session.addEventListeners(this);
+		}
+
+		@Override
+		public void transactionCompletion(boolean successful) {
+			if (!successful)
+				return;
+			for (File f : toDelete)
+				f.delete();
+		}
+	}
 
 	@Override
 	@Transactional
@@ -131,23 +156,15 @@ public class DbService implements IDbService
 		final List<File> toDelete = new ArrayList<>();
 		for (Result r : list)
 		{
-			if (r.getRunTime() < lapTime.getTime())
-				// Better time already exist for this user
+			if (r.getRunTime() <= lapTime.getTime())
+				// Better or same time already exist for this user
 				return player;
 			if (r.getDataPath() != null)
 				toDelete.add(new File(F355.getFileStore(), r.getDataPath()));
 			session.delete(r);
 		}
 		if (!toDelete.isEmpty())
-			session.addEventListeners(new BaseSessionEventListener() {
-				@Override
-				public void transactionCompletion(boolean successful) {
-					if (!successful)
-						return;
-					for (File f : toDelete)
-						f.delete();
-				}
-			});
+			new TransactionalFileDeleter(session, toDelete);
 
 		Result result = new Result();
 		result.setPlayer(player);
@@ -166,48 +183,41 @@ public class DbService implements IDbService
 
 	@Override
 	@Transactional
-	public void saveResult(byte[] data, String fileName, String playerId, String ip)
+	public Player saveResult(int playerId, byte[] data, String fileName, String ip)
 	{
-		if (playerId == null)
-			playerId = new String(data, 0x290, 16);
+		String regId = new String(data, 0x290, 16);
 		Session session = sessionFactory.getCurrentSession();
+		Player player = session.get(Player.class, playerId);
+		if (player == null)
+			throw new RuntimeException("Player not found");
+		if (!regId.equals(player.getRegId()))
+			throw new RuntimeException("Invalid driving data user id");
 		
-		Query<Player> query = session.createQuery("from Player where regId = :regId", Player.class)
-				.setParameter("regId", playerId);
-		Player player = null;
-		try {
-			player = query.getSingleResult();
-		} catch (NoResultException e) {
-			throw new RuntimeException("Player not registered");
-		}
+		int circuit = getCircuitId(data);
+		boolean semiAuto = isSemiAuto(data);
+		int time = getRunTime(data);
+		int raceMode = getRaceMode(data);
+		Query<Result> rQuery = session.createQuery("from Result where player = :player and circuit = :circuit and semiAuto = :semiAuto", Result.class)
+				.setParameter("player", player)
+				.setParameter("circuit", circuit)
+				.setParameter("semiAuto", semiAuto);
+		List<Result> list = rQuery.getResultList();
+		if (list.isEmpty() || list.get(0).getRunTime() != time || list.get(0).getRaceMode() != raceMode)
+			throw new RuntimeException("Unknown driving data");
 		
-		Result result = new Result();
-		result.setPlayer(player);
-		result.setRunDate(new Timestamp(System.currentTimeMillis()));
+		Result result = list.get(0);
+		if (result.getDataPath() != null)
+			new TransactionalFileDeleter(session, new File(F355.getFileStore(), result.getDataPath()));
+
 		result.setDataPath(fileName);
-		result.setCircuit(getCircuitId(data));
-		result.setRaceMode(getRaceMode(data));
-		result.setRunTime(getRunTime(data));
-		result.setSemiAuto(isSemiAuto(data));
 		// tuned? F355DATA.SGO is tuned
 		// assisted? F355DATA.MNZ is without assist
 		// arcade: offset 0x287: 0=arcade (f355, twin), 66=dc (us, eu, jp), 47=twin 2 ?
-		if (result.getCircuit() >= 6 || data[0x287] != 0x66)
-			result.setArcade(true);
-
-		Query<Result> rQuery = session.createQuery("from Result where player = :player and circuit = :circuit and semiAuto = :semiAuto", Result.class)
-				.setParameter("player", player)
-				.setParameter("circuit", result.getCircuit())
-				.setParameter("semiAuto", result.isSemiAuto());
-		List<Result> list = rQuery.getResultList();
-		for (Result r : list)
-			if (r.getRunTime() < result.getRunTime())
-				// Better time already exist for this user
-				return;
-			else
-				session.delete(r);
-		
+		//if (result.getCircuit() >= 6 || data[0x287] != 0x66)
+		//	result.setArcade(true);
 		session.merge(result);
+		
+		return player;
 	}
 	
 	@Override
@@ -251,7 +261,7 @@ public class DbService implements IDbService
 		else if (arcade == 1)
 			sb.append(" and arcade = true");
 		
-		sb.append(" order by runTime");
+		sb.append(" order by runTime, runDate");
 			
 		Query<Result> query = session.createQuery(sb.toString(), Result.class)
 				.setParameter("circuit", circuit)

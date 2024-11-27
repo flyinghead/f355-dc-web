@@ -1,7 +1,3 @@
-<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<fmt:setLocale value="${bean.language}" />
-<fmt:setBundle basename="com.flyinghead.f355.text" />
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <html>
@@ -49,7 +45,7 @@
          <td nowrap>Play Count</td><td nowrap><b>${bean.raceCount}</b></td>
       </tr>
       <tr>
-         <td nowrap>Distance Driven</td><td nowrap><b>${bean.distanceMiles} mi</b></td>
+         <td nowrap>Distance Driven</td><td nowrap><b>${bean.distanceKm} km</b></td>
       </tr>
    </table>
  
@@ -122,6 +118,6 @@
 	  </table>
 	</form>
 
-<center><a href="http://www.sega-rd2.com/f355/ranking_${bean.country}/RANK/RANKCOURSE/index.html"><b>See all rankings</b></a></center>
+<center><a href="http://www.sega-rd2.com/f355/ranking_uk/RANK/RANKCOURSE/index.html"><b>See all rankings</b></a></center>
 </body>
 </html>

@@ -154,7 +154,7 @@ public class Player
 			return null;
 		offset += 0xd0 + (semiAuto ? 0x30 : 0);
 		int time = bytesToBCM(offset);
-		if (time == -1)
+		if (time <= 0)
 			return null;
 		byte b = data[offset + 0x90];
 		int raceMode = (b & 8) != 0 ? 2	// race

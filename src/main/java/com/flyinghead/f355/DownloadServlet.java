@@ -146,7 +146,7 @@ public class DownloadServlet extends AutowiredServlet
 		// file number (2)
 		vmi[0x4e] = 1;
 		// vmi resource name
-		System.arraycopy(id.getBytes(), 0, vmi, 0x50, 8);
+		System.arraycopy(id.getBytes(), 0, vmi, 0x50, Math.min(id.length(), 8));
 		// file name
 		System.arraycopy(name.getBytes(), 0, vmi, 0x58, 12);
 		// file size

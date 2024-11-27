@@ -25,6 +25,7 @@ public class RegisterBean
 	private Player player;
 	private String country;
 	private String uploadMessage = "";
+	private String language = "en_US";
 
 	public Player getPlayer() {
 		return player;
@@ -100,8 +101,14 @@ public class RegisterBean
 		return country;
 	}
 
-	public void setCountry(String country) {
+	public void setCountry(String country)
+	{
 		this.country = country;
+		if ("uk".equals(country))
+			language = "en_GB";
+		else if (!"en".equals(country))
+			// fr, de, it, es, ja
+			language = country;
 	}
 
 	public String getUploadMessage() {
@@ -110,5 +117,9 @@ public class RegisterBean
 
 	public void setUploadMessage(String uploadMessage) {
 		this.uploadMessage = uploadMessage;
+	}
+
+	public String getLanguage() {
+		return language;
 	}
 }

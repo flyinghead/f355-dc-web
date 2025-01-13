@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +63,12 @@ public class Races
 		{
 			timeoutEntries();
 			entries.put(id, entry);
+			List<String> allPlayers = new ArrayList<>();
+			for (Entry e : entries.values())
+				allPlayers.add(e.getName());
+			Collections.sort(allPlayers);
+			DiscordWebHook.playerWaiting(entry.getName(), F355.getCircuitName(entry.circuit),
+					allPlayers.toArray(new String[entries.size()]));
 		}
 		
 		int checkEntry(int id)
@@ -162,11 +169,16 @@ public class Races
 
 		Race race = new Race(votedCircuit, racers.get(0).weather);
 		races.add(race);
+		List<String> racerNames = new ArrayList<>();
 		for (Entry entry : racers) {
 			enterRace(race, entry.id, entry.entryData);
 			waitingList.entries.remove(entry.id);
+			racerNames.add(entry.getName());
 		}
 		race.setStatus(Race.STATUS_QUALIF);
+		
+		Collections.sort(racerNames);
+		DiscordWebHook.raceStart(race.getCircuitName(), racerNames.toArray(new String[racerNames.size()]));
 		
 		return race;
 	}

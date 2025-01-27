@@ -17,9 +17,12 @@
  */
 package com.flyinghead.f355;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,8 +46,39 @@ public class Race
 		if (status != this.status) {
 			this.status = status;
 			this.startTime = new Date();
+			if (status == STATUS_FINAL)
+			{
+				// Calculate the qualifier ranking
+				List<Integer> ids = new ArrayList<>(getEntryIds());
+				ids.sort(new Comparator<Integer>() {
+					@Override
+					public int compare(Integer i1, Integer i2) {
+						byte[] q1 = getQualifier(i1);
+						byte[] q2 = getQualifier(i2);
+						int frames1 = bytesToId(q1, 0);
+						int frames2 = bytesToId(q2, 0);
+						if (frames1 != frames2)
+							return frames1 - frames2;
+						float frac1 = Float.intBitsToFloat(bytesToId(q1, 4));
+						float frac2 = Float.intBitsToFloat(bytesToId(q2, 4));
+	
+						return frac1 < frac2 ? -1 : frac1 > frac2 ? 1 : 0;
+					}
+				});
+				for (int i = 0; i < ids.size(); i++)
+					qualifiedRank.put(ids.get(i), i + 1);
+			}
 		}
 	}
+	
+	private int bytesToId(byte[] array, int offset)
+	{
+		return (array[offset] & 0xff)
+				| ((array[offset + 1] & 0xff) << 8)
+				| ((array[offset + 2] & 0xff) << 16)
+				| ((array[offset + 3] & 0xff) << 24);
+	}
+
 	public int getCircuit() {
 		return circuit;
 	}
@@ -92,6 +126,17 @@ public class Race
 	public synchronized boolean isQualifierDone() {
 		return entries.size() == qualifiers.size();
 	}
+	public synchronized boolean hasQualified(int id) {
+		Integer rank = qualifiedRank.get(id);
+		return rank != null && rank <= 8;
+	}
+	public synchronized int getQualifierRanking(int id) {
+		Integer rank = qualifiedRank.get(id);
+		if (rank == null)
+			return 17;
+		else
+			return rank;
+	}
 
 	public synchronized byte[] getResult(int id) {
 		return results.get(id);
@@ -100,7 +145,7 @@ public class Race
 		results.put(id, result);
 	}
 	public synchronized boolean isRaceDone(){
-		return entries.size() == results.size();
+		return entries.size() == results.size() || results.size() == 8;
 	}
 
 	private int status = STATUS_INIT;
@@ -109,5 +154,6 @@ public class Race
 	private Map<Integer, byte[]> entries = new HashMap<>();
 	private Map<Integer, byte[]> qualifiers = new HashMap<>();
 	private Map<Integer, byte[]> results = new HashMap<>();
+	private Map<Integer, Integer> qualifiedRank = new HashMap<>();
 	private Date startTime = new Date();
 }

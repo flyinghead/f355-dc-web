@@ -244,7 +244,7 @@ public class Races
 				// Use default result for timed out drivers
 				byte [] defaultResult = null;
 				for (int id : race.getEntryIds())
-					if (race.getResult(id) == null)
+					if (race.hasQualified(id) && race.getResult(id) == null)
 					{
 						if (defaultResult == null)
 						{

@@ -51,6 +51,12 @@ public class FinalServlet extends NetplayServlet
 					respondError(1, resp);
 					return;
 				}
+				if (!race.hasQualified(id))
+				{
+					log("final[0] Race " + race.getCircuitName() + " results received by didn't qualify!!! (for " + race.getEntryName(id) + ")");
+					respondError(1, resp);
+					return;
+				}
 				log("Race " + race.getCircuitName() + " result received for " + race.getEntryName(id));
 				byte[] result = Arrays.copyOfRange(data, 11, data.length);
 				race.setResult(id, result);
@@ -113,7 +119,7 @@ public class FinalServlet extends NetplayServlet
 				int offset = 8;
 				for (int rid : race.getEntryIds())
 				{
-					if (rid != id)
+					if (rid != id && race.hasQualified(rid))
 					{
 						byte[] result = race.getResult(rid);
 						if (result != null) {

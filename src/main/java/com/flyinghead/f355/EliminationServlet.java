@@ -53,13 +53,13 @@ public class EliminationServlet extends NetplayServlet
 			}
 			byte[] qualifier = Arrays.copyOfRange(data, 11, 11 + 8);
 			int frames = bytesToId(qualifier, 0);
+			int frac = bytesToId(qualifier, 4);
 			String timeStr;
 			if (frames == 0xfffff) {
-				timeStr = "No Goal";
+				timeStr = "No Goal (" + Float.intBitsToFloat(frac) + ")";
 			}
 			else
 			{
-				int frac = bytesToId(qualifier, 4);
 				float time = ((float)frames + Float.intBitsToFloat(frac)) / 60.2f;
 				int min = (int)time / 60;
 				time -= (float)min * 60.f;
@@ -73,6 +73,21 @@ public class EliminationServlet extends NetplayServlet
 
 			// Nothing to return
 			respond(new byte[0], resp);
+			/*
+			for (int fid : race.getEntryIds()) {
+				if (race.getEntryName(fid).startsWith("Fake "))
+				{
+					byte[] fakeQualif = new byte[8];
+					fakeQualif[0] = (byte)0xff;
+					fakeQualif[1] = (byte)0xff;
+					fakeQualif[2] = 0xf;
+					fakeQualif[3] = 0;
+					int i = Float.floatToIntBits(fid / -9.993470179f);
+					idToBytes(i, fakeQualif, 4);
+					race.setQualifier(fid, fakeQualif);
+				}
+			}
+			*/
 		}
 		else
 		{
@@ -116,8 +131,12 @@ public class EliminationServlet extends NetplayServlet
 					return;
 				}
 				boolean qualifDone = race.isQualifierDone();
-				if (qualifDone)
+				if (qualifDone) {
 					race.setStatus(Race.STATUS_FINAL);
+					//log("Qualifier ranking:");
+					//for (Integer rid : race.getEntryIds())
+					//	log(race.getEntryName(rid) + ": " + race.getQualifierRanking(rid));
+				}
 				byte[] outdata = {
 					(byte)(qualifDone ? 1 : 0), 0, 0, 0,	// 0:running, 1:all racers done
 					1, 0, 0, 0,		// position?

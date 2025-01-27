@@ -29,6 +29,18 @@ import javax.servlet.http.HttpServletResponse;
 public class EntryServlet extends NetplayServlet
 {
 	private static final long serialVersionUID = 1L;
+	/*
+	private static final byte[] fakeId = new byte[] {
+			0, (byte)0xfc, 0x6d, 0x67, 0x6d, 0x7a, 0x64, 0x62, 0x74, 0x75, 0x32, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x4e, 0x45, 0x54, 0, 0x46,
+			0x4c, 0x59, 0x49, 0x4e, 0x47, 0x48, 0x45, 0x41, 0x44, 0x20, 0x20, 0x20, 0x55, 0x53, 0, 1,
+			0, 0, 0, 0, 0, 0, 0, 0xa, 0, 0, 0, 0, 0, 0, 0, 7, 1, 0, 0
+	};
+	*/
 
 	@Override
 	protected void process(byte[] data, HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
@@ -58,6 +70,42 @@ public class EntryServlet extends NetplayServlet
 			idToBytes(id, outdata, 0);
 			idToBytes(id, outdata, 4);
 			respond(outdata, resp);
+			/*
+			if (getRaces().getWaitingListSize() == 1) {
+				if (fakeId.length != 131)
+					throw new RuntimeException("fakeId has " + fakeId.length + " bytes");
+				for (int i = 0; i < 15; i++)
+				{
+					byte[] fakeEntryData = Arrays.copyOfRange(fakeId, 3, 3 + 128);
+					fakeEntryData[0x7c] = (byte)F355.getRandomInt(100);	// car #
+					fakeEntryData[0x7d] = (byte)F355.getRandomInt(8);	// car color
+					fakeEntryData[108] = entryData[108];	// circuit
+					fakeEntryData[92] = 'F';
+					fakeEntryData[93] = 'a';
+					fakeEntryData[94] = 'k';
+					fakeEntryData[95] = 'e';
+					fakeEntryData[96] = ' ';
+					if (i < 9) {
+						fakeEntryData[97] = (byte)((int)'1' + i);
+						fakeEntryData[98] = ' ';
+					}
+					else {
+						fakeEntryData[97] = '1';
+						fakeEntryData[98] = (byte)((int)'0' + i - 9);
+					}
+					fakeEntryData[99] = ' ';
+					fakeEntryData[100] = ' ';
+					fakeEntryData[101] = ' ';
+					fakeEntryData[102] = ' ';
+					fakeEntryData[103] = ' ';
+					fakeEntryData[105] = 'B';
+					fakeEntryData[106] = 'R';
+					id = makeId();
+					entry = getRaces().addEntry(id, fakeEntryData);
+					log("Fake entry " + entry.getName() + " circuit " + F355.getCircuitName(entry.circuit));
+				}
+			}
+			*/
 		}
 		else
 		{

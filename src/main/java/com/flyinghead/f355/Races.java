@@ -213,8 +213,8 @@ public class Races
 				time = (F355.getQualifierTime(race.getCircuit()) + 60) * 1000;
 				break;
 			case Race.STATUS_FINAL:
-				// add 2 min to the expected race time
-				time = (F355.getQualifierTime(race.getCircuit()) * F355.getLapCount(race.getCircuit()) + 120) * 1000;
+				// add 3 min to the expected race time
+				time = (F355.getQualifierTime(race.getCircuit()) * F355.getLapCount(race.getCircuit()) + 180) * 1000;
 				break;
 			case Race.STATUS_FINISHED:
 				// keep results for 5 min

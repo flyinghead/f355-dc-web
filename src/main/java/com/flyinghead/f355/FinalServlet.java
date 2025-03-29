@@ -17,7 +17,10 @@
  */
 package com.flyinghead.f355;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 import javax.servlet.ServletException;
@@ -53,13 +56,14 @@ public class FinalServlet extends NetplayServlet
 				}
 				if (!race.hasQualified(id))
 				{
-					log("final[0] Race " + race.getCircuitName() + " results received by didn't qualify!!! (for " + race.getEntryName(id) + ")");
+					log("final[0] Race " + race.getCircuitName() + " results received but didn't qualify!!! (for " + race.getEntryName(id) + ")");
 					respondError(1, resp);
 					return;
 				}
 				log("Race " + race.getCircuitName() + " result received for " + race.getEntryName(id));
 				byte[] result = Arrays.copyOfRange(data, 11, data.length);
 				race.setResult(id, result);
+				saveResult(race, id, result);
 				if (race.isRaceDone())
 					race.setStatus(Race.STATUS_FINISHED);
 			}
@@ -138,5 +142,30 @@ public class FinalServlet extends NetplayServlet
 			return;
 		}
 		resp.setStatus(HttpServletResponse.SC_OK);
-	}	
+	}
+	
+	void saveResult(Race race, int id, byte[] result) {
+		File racesDir = new File(F355.getFileStore(), "races");
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+		String dirname = sdf.format(race.getStartTime()) + "_" + race.getCircuitName().replace(' ', '_');
+		File raceDir = new File(racesDir, dirname);
+		raceDir.mkdirs();
+		String filename = Integer.toHexString(id) + "_" 
+				+ race.getEntryName(id).replace(' ', '_').replace('/', '_') + ".bin";
+		File resFile = new File(raceDir, filename);
+		FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream(resFile);
+			fos.write(result);
+			log("Result saved to " + resFile.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (fos != null) {
+				try {
+					fos.close();
+				} catch (IOException e) {}
+			}
+		}
+	}
 }

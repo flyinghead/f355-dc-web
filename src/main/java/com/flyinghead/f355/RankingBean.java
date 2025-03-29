@@ -33,7 +33,7 @@ public class RankingBean
 {
 	private HttpServletRequest request;
 	private String language = "en_US";
-	private int circuit;
+	private int circuit = 1;
 	private String circuitName;
 	private boolean semiAuto;
 	private String headgif;
@@ -65,7 +65,11 @@ public class RankingBean
 		else if (path.contains("ranking_ja"))
 			language = "ja";
 
-		circuit = Integer.valueOf(request.getParameter("circuit"));
+		String s = request.getParameter("circuit");
+		if (s != null)
+			try {
+				circuit = Integer.valueOf(s);
+			} catch (NumberFormatException e) {}
 		circuitName = F355.getCircuitName(circuit);
 		
 		headgif = "notfound.gif";
@@ -122,7 +126,7 @@ public class RankingBean
 		semiAuto = "1".equals(request.getParameter("semiAuto"));
 		
 		index = 1;
-		String s = request.getParameter("index");
+		s = request.getParameter("index");
 		if (s != null)
 			index = Integer.valueOf(s);
 		listIndex = index;

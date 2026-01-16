@@ -18,104 +18,33 @@
 package com.flyinghead.f355;
 
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Properties;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class DiscordWebHook
 {
-	static class Json
-	{
-		public void addProp(String name, Object value) {
-			root.put(name, value);
-		}
-		
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
-			toJson(sb, root);
-			return sb.toString();
-		}
-		
-		private void toJson(StringBuilder sb, List<Object> list)
-		{
-			sb.append("[ ");
-			if (!list.isEmpty())
-			{
-				for (Object o : list) {
-					toJson(sb, o);
-					sb.append(", ");
-				}
-				sb.delete(sb.length() - 2, sb.length());
-			}
-			sb.append(" ]");
-		}
-
-		private void toJson(StringBuilder sb, Map<String, Object> map)
-		{
-			sb.append("{ ");
-			if (!map.isEmpty())
-			{
-				for (Map.Entry<String, Object> entry : map.entrySet()) {
-					sb.append('"').append(entry.getKey()).append("\": ");
-					toJson(sb, entry.getValue());
-					sb.append(", ");
-				}
-				sb.delete(sb.length() - 2, sb.length());
-			}
-			sb.append(" }");
-		}
-
-		private void toJson(StringBuilder sb, Number n) {
-			sb.append(n.toString());
-		}
-
-		private void toJson(StringBuilder sb, Boolean b) {
-			sb.append(b.toString());
-		}
-
-		private void toJson(StringBuilder sb, String s) {
-			sb.append('"');
-			for (char c : s.toCharArray()) {
-				if (c == '\n')
-					sb.append("\\n");
-				else if (c == '"')
-					sb.append("\\\"");
-				else
-					sb.append(c);
-			}
-			sb.append('"');
-		}
-
-		private void toJson(StringBuilder sb, Object o) {
-			if (o == null)
-				sb.append("null");
-			else if (o instanceof List<?>)
-				toJson(sb, (List<Object>)o);
-			else if (o instanceof Number)
-				toJson(sb, (Number)o);
-			else if (o instanceof Boolean)
-				toJson(sb, (Boolean)o);
-			else if (o instanceof Map<?, ?>)
-				toJson(sb, (Map<String, Object>)o);
-			else
-				toJson(sb, o.toString());
-		}
-		private Map<String, Object> root = new HashMap<>();
-	};
+	private static String IconUrl = null;
+	private static String GameName = null;
+	private static String WebHookUrl = null;
 
 	private static void sendMessage(String json)
 	{
-		String webhookUrl = System.getProperty("f355.discord.webhook", null);
-		if (webhookUrl == null)
+		if (WebHookUrl == null || WebHookUrl.isEmpty())
 			return;
 		URL url;
 		try {
-			url = new URL(webhookUrl);
+			url = new URL(WebHookUrl);
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			return;
@@ -142,6 +71,59 @@ public class DiscordWebHook
 			e.printStackTrace();
 		}
 	}
+	
+	private static String escape(String s)
+	{
+		StringBuilder sb = new StringBuilder(s.length());
+		for (char c : s.toCharArray())
+		{
+			if (c == '*' || c == '_' || c == '`' || c == '~' || c == '<'
+					|| c == '>' || c == ':' || c == '[' || c == '\\')
+				sb.append('\\');
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+
+	private static void readConfig()
+	{
+		if (IconUrl == null)
+		{
+			try {
+				String text = new String(Files.readAllBytes(Paths.get("/usr/local/share/dcnet/games.json")), StandardCharsets.UTF_8);
+				JSONObject games = new JSONObject(text);
+				JSONObject game = games.getJSONObject("f355");
+				if (game != null)
+				{
+					IconUrl = game.getString("thumbnail");
+					GameName = game.getString("name");
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			if (IconUrl == null)
+				IconUrl = "https://dcnet.flyca.st/gamepic/f355.jpg";
+			if (GameName == null)
+				GameName = "F355 Challenge";
+		}
+		if (WebHookUrl == null)
+		{
+			try {
+				Properties props = new Properties();
+				props.load(new FileInputStream("/usr/local/etc/dcnet/discord.conf"));
+				String disabled = props.getProperty("disabled-games");
+				if (disabled != null && disabled.indexOf("f355") != -1)
+					WebHookUrl = "";
+				else
+					WebHookUrl = props.getProperty("webhook", System.getProperty("f355.discord.webhook", ""));
+			} catch (IOException e) {
+				e.printStackTrace();
+				WebHookUrl = ""; // Disable discord
+			}
+		}
+	}
 
 	public static void playerWaiting(String playerName, String trackName, String[] allPlayers)
 	{
@@ -162,21 +144,22 @@ public class DiscordWebHook
 		  "attachments": []
 		}
 		 */
-		Json j = new Json();
-		j.addProp("content", "Player **" + playerName + "** is waiting for other racers on circuit **" + trackName + "**.\n_ _");
-		Map<String, Object> embed = new HashMap<>();
+		readConfig();
+		JSONObject j = new JSONObject();
+		j.put("content", "Player **" + escape(playerName) + "** is waiting for other racers on circuit **" + trackName + "**.\n_ _");
+		JSONObject embed = new JSONObject();
 		embed.put("title", "Waiting List");
 		embed.put("color", 9118205);
-		Map<String, Object> author = new HashMap<>();
-		author.put("name", "F355 Challenge");
-		author.put("icon_url", "https://cdn.thegamesdb.net/images/thumb/boxart/front/125181-1.jpg");
+		JSONObject author = new JSONObject();
+		author.put("name", GameName);
+		author.put("icon_url", IconUrl);
 		embed.put("author", author);
 		StringBuilder psb = new StringBuilder();
 		for (String p : allPlayers)
-			psb.append(p).append('\n');
+			psb.append(escape(p)).append('\n');
 		embed.put("description", psb.toString());
-		j.addProp("embeds", Collections.singletonList(embed));
-		j.addProp("attachments", Collections.emptyList());
+		j.put("embeds", Collections.singletonList(embed));
+		j.put("attachments", Collections.emptyList());
 		
 		sendMessage(j.toString());
 	}
@@ -200,20 +183,21 @@ public class DiscordWebHook
 		   "attachments": []
 		 }
 		*/
-		Json j = new Json();
-		Map<String, Object> embed = new HashMap<>();
+		readConfig();
+		JSONObject j = new JSONObject();
+		JSONObject embed = new JSONObject();
 		embed.put("title", trackName + ": Race Start");
 		embed.put("color", 9118205);
-		Map<String, Object> author = new HashMap<>();
-		author.put("name", "F355 Challenge");
-		author.put("icon_url", "https://cdn.thegamesdb.net/images/thumb/boxart/front/125181-1.jpg");
+		JSONObject author = new JSONObject();
+		author.put("name", GameName);
+		author.put("icon_url", IconUrl);
 		embed.put("author", author);
 		StringBuilder psb = new StringBuilder();
 		for (String p : racers)
-			psb.append(p).append('\n');
+			psb.append(escape(p)).append('\n');
 		embed.put("description", psb.toString());
-		j.addProp("embeds", Collections.singletonList(embed));
-		j.addProp("attachments", Collections.emptyList());
+		j.put("embeds", Collections.singletonList(embed));
+		j.put("attachments", Collections.emptyList());
 		
 		sendMessage(j.toString());
 	}

@@ -18,12 +18,20 @@
 package com.flyinghead.f355;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Properties;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @WebListener
 public class TimeoutTask implements ServletContextListener, Runnable
@@ -71,6 +79,41 @@ public class TimeoutTask implements ServletContextListener, Runnable
 				f.delete();
 	}
 	
+	private void updateServerStatus(Races races) throws IOException
+	{
+		if (lastServerUpdate == 0)
+		{
+			try {
+				Properties props = new Properties();
+				props.load(new FileInputStream("/usr/local/etc/dcnet/status.conf"));
+				String update = props.getProperty("update-interval", "300");
+				updateInterval = Integer.parseInt(update);
+			} catch (NumberFormatException e) {
+				updateInterval = 300;
+			} catch (IOException e) {
+				e.printStackTrace();
+				updateInterval = 300;
+			}
+		}
+		if (System.currentTimeMillis() - lastServerUpdate < updateInterval * 1000) // default is 5 min
+			return;
+		lastServerUpdate = System.currentTimeMillis();
+		JSONObject status = new JSONObject();
+		status.put("gameId", "f355");
+		status.put("timestamp", System.currentTimeMillis() / 1000);
+		status.put("playerCount", races.getTotalPlayerCount());
+		status.put("gameCount", races.getRaceCount());
+		JSONArray array = new JSONArray();
+		array.put(status);
+		String text = array.toString(4);
+		OutputStream ostream = new FileOutputStream("/var/lib/dcnet/status/f355");
+		try {
+			ostream.write(text.getBytes("UTF-8"));
+		} finally {
+			ostream.close();
+		}
+	}
+	
 	@Override
 	public void run()
 	{
@@ -80,6 +123,11 @@ public class TimeoutTask implements ServletContextListener, Runnable
 		{
 			races.timeoutRaces(context);
 			cleanUpTempDir();
+			try {
+				updateServerStatus(races);
+			} catch (IOException e) {
+				context.log("DCNet server status update failed", e);
+			}
 			try {
 				Thread.sleep(15000);
 			} catch (InterruptedException e) {
@@ -91,4 +139,6 @@ public class TimeoutTask implements ServletContextListener, Runnable
 	private Thread thread = null;
 	private ServletContext context = null;
 	private boolean stopping = false;
+	private long lastServerUpdate = 0L;
+	private long updateInterval = 300;
 }

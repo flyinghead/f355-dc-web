@@ -275,6 +275,16 @@ public class Races
 	public synchronized int getRaceCount() {
 		return races.size();
 	}
+	public synchronized int getTotalPlayerCount() {
+		int playerCount = waitingList.entries.size();
+		for (Race race : races)
+		{
+			if (race.isRaceDone())
+				continue;
+			playerCount += race.getEntryCount();
+		}
+		return playerCount;
+	}
 
 	private List<Race> races = new ArrayList<>();
 	private Map<Integer, Race> raceById = new HashMap<>(); 
